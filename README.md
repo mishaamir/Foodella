@@ -1,6 +1,6 @@
 # 🍽️ Foodella — Restaurant Website
 
-Foodella is a fully responsive, front-end restaurant website built with a modern glassmorphism design. It includes a landing page, an interactive menu with cart functionality, and smooth animations — all built using vanilla HTML, CSS, and JavaScript (no frameworks required).
+Foodella is a fully responsive, front-end restaurant website built with a modern glassmorphism design. It includes a landing page, an interactive menu with cart functionality, and smooth animations — all built using HTML, CSS, and JavaScript.
 
 **Live Demo:** https://foodella.vercel.app/
 
