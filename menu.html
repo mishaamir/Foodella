@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="images/logo.png">
+  <title>Foodella Menu</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+/* ---------- tokens ---------- */
+:root{
+  --maroon-dark:#210808;
+  --maroon:#4a1010;
+  --crimson:#8a232e;
+  --crimson-light:#b23a44;
+  --crimson-rgb:138,35,46;
+  --gold:#ffb703;
+  --cream:#f6e9d3;
+  --ink:#2b1414;
+  --glass:rgba(255,255,255,0.55);
+  --glass-strong:rgba(255,255,255,0.72);
+  --glass-border:rgba(255,255,255,0.55);
+  --glass-dark:rgba(20,8,8,0.4);
+  --glass-dark-border:rgba(255,255,255,0.25);
+  --footer-1:#3a1010;
+  --footer-2:#7a1f24;
+}
+* { box-sizing: border-box; }
+body {
+    background: var(--cream);
+    margin: 0; padding: 0;
+    font-family: 'Outfit', sans-serif;
+    color: var(--ink);
+}
+h1,h2,h3,h4,h5 { font-family: 'Playfair Display', serif; }
+
+/* ---------- background blobs ---------- */
+.bg-blob { position: fixed; border-radius: 50%; filter: blur(80px); z-index: -1; opacity: 0.3; pointer-events: none; }
+.blob-1 { width: 420px; height: 420px; background: var(--crimson); top: -100px; left: -150px; }
+.blob-2 { width: 380px; height: 380px; background: var(--gold); top: 50%; right: -180px; }
+.blob-3 { width: 320px; height: 320px; background: var(--crimson-light); bottom: 0; left: 30%; }
+
+/* ---------- navbar ---------- */
+.navbar-custom {
+    background: rgba(74, 16, 16, 0.55);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--glass-dark-border);
+    padding: 10px 0;
+    transition: box-shadow 0.3s ease, padding 0.3s ease, background 0.3s ease;
+}
+.navbar-custom.scrolled { box-shadow: 0 8px 30px rgba(0,0,0,0.25); padding: 4px 0; background: rgba(51,10,10,0.75); }
+.navbar-brand img { height: 50px; width: auto; }
+.navbar-nav .nav-item { margin-left: 25px; }
+.navbar-nav .nav-link { color: white !important; font-weight: 500; }
+.navbar-toggler { border: 2px solid white; }
+.navbar-toggler:focus { box-shadow: none; }
+.navbar-toggler-icon { filter: brightness(0) invert(1); }
+
+.nav-link { position: relative; }
+.nav-link::after {
+    content: ""; position: absolute; left: 0; bottom: -4px;
+    width: 0; height: 2px; background: var(--gold);
+    transition: width 0.3s ease;
+}
+.nav-link:hover::after { width: 100%; }
+
+.cart-icon-wrap {
+    position: relative; display: inline-flex; align-items: center;
+    margin-left: 20px; cursor: pointer; color: #fff; font-size: 22px;
+    background: none; border: none;
+}
+.cart-badge {
+    position: absolute; top: -8px; right: -10px;
+    background: var(--gold); color: var(--maroon-dark);
+    font-size: 11px; font-weight: bold; padding: 1px 6px;
+    border-radius: 50px; line-height: 1.4;
+}
+
+.menu-heading {
+    color: var(--crimson); text-align: center; font-size: 3rem;
+    font-weight: 800; margin-bottom: 2rem; margin-top: 90px;
+}
+
+/* ---------- toolbar ---------- */
+.menu-toolbar {
+    position: sticky; top: 68px; z-index: 900;
+    background: rgba(255, 248, 240, 0.75);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    padding: 15px 0; border-bottom: 1px solid rgba(var(--crimson-rgb),0.12);
+}
+.menu-search { max-width: 420px; margin: 0 auto 15px auto; position: relative; }
+.menu-search input {
+    width: 100%; padding: 10px 40px 10px 16px; border-radius: 30px;
+    border: 2px solid var(--crimson); outline: none; font-size: 0.95rem;
+    background: rgba(255,255,255,0.7);
+    transition: box-shadow 0.3s ease;
+}
+.menu-search input:focus { box-shadow: 0 0 0 4px rgba(var(--crimson-rgb),0.15); }
+.menu-search i.bi-search { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--crimson); pointer-events: none; }
+
+.filter-pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.filter-pill {
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(8px);
+    border: 2px solid var(--crimson); color: var(--crimson);
+    padding: 6px 18px; border-radius: 30px; font-weight: 600; font-size: 0.9rem;
+    cursor: pointer; transition: 0.25s ease; white-space: nowrap;
+}
+.filter-pill:hover { background: rgba(var(--crimson-rgb),0.12); }
+.filter-pill.active { background: rgba(var(--crimson-rgb),0.9); color: #fff; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+
+#no-results { display: none; text-align: center; padding: 40px 0; color: #999; font-size: 1.1rem; }
+
+/* ---------- menu sections ---------- */
+.menu-section { padding: 40px 0; margin-top: 100px;}
+.menu-title { display: flex; align-items: center; margin-bottom: 25px; }
+.menu-title .line { width: 4px; height: 25px; background: var(--crimson); margin-right: 10px; }
+.menu-title h4 { margin: 0; font-weight: bold; }
+
+/* ---------- glass food card ---------- */
+.food-card {
+    position: relative;
+    padding: 15px;
+    border-radius: 18px;
+    background: var(--glass-strong);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 12px 30px rgba(var(--crimson-rgb),0.1);
+    text-align: center; margin-bottom: 35px; height: 100%;
+    display: flex; flex-direction: column;
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+.food-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(var(--crimson-rgb),0.2); }
+.food-card img { height: 180px; width: 100%; object-fit: cover; border-radius: 10px; transition: transform 0.4s ease; }
+.food-card:hover img { transform: scale(1.06); }
+.food-name { font-weight: bold; margin-top: 10px; }
+.price { color: var(--crimson); font-weight: bold; }
+
+.chefs-pick {
+    position: absolute; top: 10px; left: 10px;
+    background: linear-gradient(135deg, var(--gold), #ff8f3f);
+    color: var(--maroon-dark); font-size: 0.7rem; font-weight: 700;
+    padding: 4px 10px; border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    z-index: 2;
+}
+
+.fav-btn {
+    position: absolute; top: 8px; right: 8px;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(var(--crimson-rgb),0.2);
+    color: var(--crimson); font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 2; transition: 0.2s ease;
+}
+.fav-btn:hover { transform: scale(1.1); }
+.fav-btn.active { background: var(--crimson); color: #fff; }
+
+/* ---------- button ---------- */
+.btn-orange {
+    background: rgba(var(--crimson-rgb),0.85); color: white; border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    width: 60%; padding: 9px; border-radius: 8px;
+    margin-top: auto; align-self: center;
+    transition: 0.25s ease; cursor: pointer;
+}
+.btn-orange:hover { background: rgba(var(--crimson-rgb),1); box-shadow: 0 6px 16px rgba(var(--crimson-rgb),0.35); transform: translateY(-2px); }
+.btn-orange:active { transform: scale(0.95); }
+
+/* ---------- footer ---------- */
+.foodella-footer {
+    background: linear-gradient(160deg, var(--footer-1), var(--footer-2));
+    border-top: 1px solid rgba(255,183,3,0.35);
+    color: white; padding: 40px 0 20px 0; font-family: 'Outfit', sans-serif;
+    margin-top: 200px;
+}
+.footer-container { max-width: 1100px; margin: 0 auto; padding: 0 15px; }
+.footer-logo { text-align: center; margin-top: -5px; margin-bottom: 50px; }
+.footer-logo img { height: 70px; width: auto; }
+.footer-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; }
+.footer-col { flex: 0 1 250px; min-width: 200px; text-align: center; }
+.footer-col h5 { font-weight: bold; text-transform: uppercase; margin-bottom: 20px; font-size: 1.1rem; }
+.footer-links a { color: white; text-decoration: none; display: block; line-height: 2; opacity: 0.9; transition: 0.3s; }
+.footer-links a:hover { opacity: 1; text-decoration: underline; }
+.footer-contact p { margin-bottom: 8px; line-height: 1.8; opacity: 0.9; font-size: 15px; }
+.footer-bottom { text-align: center; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 20px; }
+.footer-bottom p { font-size: 14px; opacity: 0.7; }
+
+/* ---------- popup / blur ---------- */
+#main-wrapper { transition: filter 0.4s ease; }
+.blur-active { filter: blur(10px); pointer-events: none; }
+
+#custom-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55); z-index: 2000;
+}
+#order-popup {
+    display: none; position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--glass-strong);
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-border);
+    padding: 30px; width: 90%; max-width: 400px;
+    border-radius: 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+    z-index: 2001; text-align: center;
+}
+#order-popup h3 { color: var(--crimson); margin-bottom: 15px; }
+.p-price { font-size: 1.4rem; color: var(--crimson); font-weight: bold; margin: 10px 0; }
+.p-prep-time { font-size: 0.85rem; color: #7a5c5c; margin-bottom: 10px; }
+.p-notes {
+    width: 100%; border-radius: 10px; border: 1px solid rgba(var(--crimson-rgb),0.25);
+    padding: 8px 12px; font-size: 0.9rem; resize: none; margin-top: 10px;
+    background: rgba(255,255,255,0.6);
+}
+.p-notes:focus { outline: none; border-color: var(--crimson); }
+.confirm-btn { background: rgba(40,167,69,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 10px 25px; border-radius: 8px; cursor: pointer; margin-right: 10px; }
+.cancel-btn { background: rgba(var(--crimson-rgb),0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 10px 25px; border-radius: 8px; cursor: pointer; }
+
+/* ---------- quantity ---------- */
+.qty-selector { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 15px 0; }
+.qty-btn {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 2px solid var(--crimson); background: #fff; color: var(--crimson);
+    font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s ease;
+}
+.qty-btn:hover { background: var(--crimson); color: #fff; }
+#p-qty-value { font-size: 1.2rem; font-weight: bold; min-width: 24px; text-align: center; }
+.add-cart-btn { background: rgba(var(--crimson-rgb),0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 10px 25px; border-radius: 8px; cursor: pointer; margin-right: 10px; transition: 0.25s ease; }
+.add-cart-btn:hover { background: rgba(var(--crimson-rgb),1); }
+
+/* ---------- cart panel ---------- */
+#cart-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2100; }
+#cart-panel {
+    position: fixed; top: 0; right: -400px; width: 100%; max-width: 380px; height: 100%;
+    background: var(--glass-strong);
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border-left: 1px solid var(--glass-border);
+    z-index: 2200; box-shadow: -8px 0 30px rgba(0,0,0,0.25);
+    display: flex; flex-direction: column;
+    transition: right 0.4s ease;
+}
+#cart-panel.open { right: 0; }
+.cart-header {
+    background: rgba(var(--crimson-rgb),0.92); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: #fff; padding: 20px;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.cart-header h4 { margin: 0; }
+.cart-close-btn { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
+.cart-items { flex: 1; overflow-y: auto; padding: 15px 20px; }
+.cart-item-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(var(--crimson-rgb),0.1); }
+.cart-item-info { flex: 1; }
+.cart-item-name { font-weight: bold; font-size: 0.95rem; margin-bottom: 4px; }
+.cart-item-note { font-size: 0.75rem; color: #8a6a6a; font-style: italic; margin-top: 2px; }
+.cart-item-price { color: var(--crimson); font-size: 0.85rem; }
+.cart-item-qty { display: flex; align-items: center; gap: 8px; }
+.cart-qty-btn { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--crimson); background: #fff; color: var(--crimson); cursor: pointer; font-weight: bold; line-height: 1; }
+.cart-remove-btn { background: none; border: none; color: #999; font-size: 18px; cursor: pointer; }
+.cart-remove-btn:hover { color: var(--crimson); }
+.cart-empty-msg { text-align: center; color: #999; padding: 40px 10px; }
+.cart-footer { padding: 18px 20px; border-top: 2px solid rgba(var(--crimson-rgb),0.1); }
+.cart-total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1rem; margin-bottom: 12px; }
+.checkout-btn { width: 100%; background: rgba(40,167,69,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.25s ease; }
+.checkout-btn:hover { background: rgba(30,126,52,0.95); }
+.checkout-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+/* ---------- floating buttons ---------- */
+#floating-cart-btn {
+    position: fixed; right: 18px; bottom: 22px; z-index: 1500;
+    background: rgba(var(--crimson-rgb),0.88); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 50px;
+    padding: 14px 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    font-size: 20px; display: flex; align-items: center; gap: 8px; cursor: pointer;
+}
+#floating-cart-btn .cart-badge { top: -6px; right: -6px; }
+
+#back-to-top {
+    position: fixed; left: 20px; bottom: 24px; z-index: 1500;
+    width: 46px; height: 46px; border-radius: 50%;
+    background: rgba(20,8,8,0.55);
+    backdrop-filter: blur(10px);
+    color: #fff; border: none; font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+    opacity: 0; visibility: hidden; transform: translateY(15px);
+    transition: 0.35s ease; cursor: pointer;
+}
+#back-to-top.show { opacity: 1; visibility: visible; transform: translateY(0); }
+
+/* ---------- reveal ---------- */
+.reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.reveal.active { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) { .reveal { transition: none !important; opacity: 1 !important; transform: none !important; } }
+
+/* ---------- toast ---------- */
+#toast-container { position: fixed; top: 90px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; }
+.toast-msg {
+    background: var(--glass-strong);
+    backdrop-filter: blur(16px);
+    border-left: 5px solid var(--crimson); color: #333;
+    padding: 14px 20px; border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.18);
+    min-width: 240px; max-width: 320px; font-weight: 500; font-size: 14px;
+    transform: translateX(120%); opacity: 0; transition: 0.4s ease;
+}
+.toast-msg.show { transform: translateX(0); opacity: 1; }
+
+/* ---------- responsive ---------- */
+@media(max-width:991px){
+    .navbar-nav { text-align:center; margin-top:15px; }
+    .navbar-nav .nav-item { margin:10px 0; }
+    .navbar-collapse { background: var(--maroon); padding:15px; border-radius:10px; }
+    .menu-heading { font-size:2.3rem; margin-top:50px; }
+    .menu-section { padding: 30px 0; }
+}
+@media(max-width:768px){
+    .food-card img { height: 150px; }
+    .food-card { padding: 12px; }
+    .food-card .description, .food-card .quantity, .food-card .serving, .food-card .tag { font-size: 0.85rem; }
+    .food-name { font-size: 1rem; }
+    .btn-orange { width: 70%; font-size: 0.9rem; }
+    .foodella-footer { margin-top: 100px; }
+    .footer-col { min-width: 150px; }
+}
+@media(max-width:576px){
+    .navbar-brand img { height:42px; }
+    .menu-heading { font-size:1.8rem; margin-bottom: 2rem; }
+    .food-card img { height: 130px; }
+    .food-card { padding: 10px; margin-bottom: 22px; }
+    .food-name { font-size: 0.95rem; }
+    .price { font-size: 0.9rem; }
+    .btn-orange { width: 85%; padding: 7px; font-size: 0.85rem; }
+    .menu-title h4 { font-size: 1.2rem; }
+    #order-popup { padding: 20px; width: 92%; }
+    #order-popup h3 { font-size: 1.1rem; }
+    .confirm-btn, .cancel-btn { padding: 8px 18px; font-size: 0.9rem; }
+    .footer-logo img { height: 55px; }
+    .menu-toolbar { top: 60px; }
+    #cart-panel { max-width: 100%; }
+    #toast-container { right: 10px; left: 10px; top: 75px; }
+    .toast-msg { max-width: 100%; }
+    #floating-cart-btn { padding: 12px 16px; font-size: 18px; }
+}
+  </style>
+</head>
+
+<body>
+
+<div class="bg-blob blob-1"></div>
+<div class="bg-blob blob-2"></div>
+<div class="bg-blob blob-3"></div>
+
+<div id="toast-container"></div>
+<button id="back-to-top" title="Back to top"><i class="bi bi-arrow-up"></i></button>
+<button id="floating-cart-btn" onclick="openCart()" title="View Cart"><i class="bi bi-cart3"></i><span class="cart-badge" id="cart-count-floating">0</span></button>
+
+<div id="custom-overlay" onclick="closePopup()"></div>
+<div id="order-popup">
+    <h3>Add to Cart</h3>
+    <p id="p-item-name" style="font-size: 1.3rem; font-weight: 500;"></p>
+    <div id="p-item-price" class="p-price"></div>
+    <p class="p-prep-time"><i class="bi bi-clock"></i> Ready in about 20-25 mins</p>
+    <div class="qty-selector">
+        <button class="qty-btn" onclick="changeQty(-1)"><i class="bi bi-dash"></i></button>
+        <span id="p-qty-value">1</span>
+        <button class="qty-btn" onclick="changeQty(1)"><i class="bi bi-plus"></i></button>
+    </div>
+    <textarea id="p-notes" class="p-notes" rows="2" placeholder="Any special instructions? (optional)"></textarea>
+    <div style="margin-top: 15px;">
+        <button class="add-cart-btn" onclick="placeOrder()"><i class="bi bi-bag-plus"></i> Add to Cart</button>
+        <button class="cancel-btn" onclick="closePopup()">Cancel</button>
+    </div>
+</div>
+
+<!-- Cart Panel -->
+<div id="cart-overlay" onclick="closeCart()"></div>
+<div id="cart-panel">
+    <div class="cart-header">
+        <h4><i class="bi bi-cart3"></i> Your Cart</h4>
+        <button class="cart-close-btn" onclick="closeCart()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="cart-items" id="cart-items-list"></div>
+    <div class="cart-footer">
+        <div class="cart-total-row">
+            <span>Total</span>
+            <span id="cart-total">Rs 0</span>
+        </div>
+        <button class="checkout-btn" id="checkout-btn" onclick="checkoutCart()"><i class="bi bi-check2-circle"></i> Checkout</button>
+    </div>
+</div>
+
+<div id="main-wrapper">
+
+<nav id="navbar" class="navbar navbar-expand-lg navbar-custom sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="index.html">
+            <img src="images/logo.png" alt="Foodella logo">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="menu.html">Menu</a></li>
+                <li class="nav-item"><a class="nav-link" href="index.html#about-us">About Us</a></li>
+                <li class="nav-item"><a class="nav-link" href="index.html#gallery">Gallery</a></li>
+                <li class="nav-item"><a class="nav-link" href="index.html#testimonials">Testimonials</a></li>
+                <li class="nav-item"><a class="nav-link" href="index.html#contact-us">Contact Us</a></li>
+                <li class="nav-item">
+                    <button class="cart-icon-wrap" onclick="openCart()" title="View Cart">
+                        <i class="bi bi-cart3"></i><span class="cart-badge" id="cart-count">0</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<h2 class="menu-heading">Our Menu</h2>
+
+<div class="menu-toolbar">
+    <div class="menu-search">
+        <input type="text" id="menu-search-input" placeholder="Search for a dish...">
+        <i class="bi bi-search"></i>
+    </div>
+    <div class="filter-pills" id="filter-pills">
+        <button class="filter-pill active" data-target="all">All</button>
+        <button class="filter-pill" data-target="favorites"><i class="bi bi-heart-fill"></i> Favorites</button>
+        <button class="filter-pill" data-target="breakfast">Breakfast</button>
+        <button class="filter-pill" data-target="desi-foods">Desi Foods</button>
+        <button class="filter-pill" data-target="junk-foods">Fast Foods</button>
+        <button class="filter-pill" data-target="chinese-foods">Chinese Foods</button>
+        <button class="filter-pill" data-target="desserts-drinks">Desserts & Drinks</button>
+        <button class="filter-pill" data-target="icecreams">Icecreams</button>
+    </div>
+</div>
+
+<p id="no-results"><i class="bi bi-search"></i> No dishes found. Try a different search term.</p>
+
+<div class="menu-section" id="breakfast">
+  <div class="container">
+    <div class="menu-title"><div class="line"></div><h4>Breakfast</h4></div>
+    <div class="row g-4">
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Cheese Omelette"><i class="bi bi-heart"></i></button>
+          <img src="images/cheese omellete.jpg" alt="Cheese Omelette">
+          <h5 class="food-name">Cheese Omelette</h5>
+          <p class="description">Fluffy eggs with loaded melted cheese and fresh herbs.</p>
+          <p class="quantity">Quantity: 1 Omelette</p>
+          <p class="tag">Freshly Prepared</p>
+          <p class="price">Rs 250</p>
+          <button class="btn-orange" onclick="openPopup('Cheese Omelette', 250)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Halwa Puri"><i class="bi bi-heart"></i></button>
+          <img src="images/halwa.jpg" alt="Halwa Puri">
+          <h5 class="food-name">Halwa Puri</h5>
+          <p class="description">Traditional breakfast with sweet halwa and crispy puri.</p>
+          <p class="quantity">Quantity: 1 Plate with 2 puri</p>
+          <p class="tag">Freshly Prepared</p>
+          <p class="price">Rs 120</p>
+          <button class="btn-orange" onclick="openPopup('Halwa Puri', 120)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Egg Sandwich"><i class="bi bi-heart"></i></button>
+          <img src="images/egg sandwich.jpg" alt="Egg Sandwich">
+          <h5 class="food-name">Egg Sandwich</h5>
+          <p class="description">Soft bread with fresh eggs and light seasoning.</p>
+          <p class="quantity">Quantity: 1 Sandwich</p>
+          <p class="tag">Light & Healthy</p>
+          <p class="price">Rs 150</p>
+          <button class="btn-orange" onclick="openPopup('Egg Sandwich', 150)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Paratha Roll"><i class="bi bi-heart"></i></button>
+          <img src="images/paratha roll.jpg" alt="Paratha Roll">
+          <h5 class="food-name">Paratha Roll</h5>
+          <p class="description">Crispy paratha filled with spicy chicken and sauce.</p>
+          <p class="quantity">Quantity: 1 Roll</p>
+          <p class="tag">Street Style</p>
+          <p class="price">Rs 200</p>
+          <button class="btn-orange" onclick="openPopup('Paratha Roll', 200)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Grilled Sandwich"><i class="bi bi-heart"></i></button>
+          <img src="images/grilled sandwich.jpg" alt="Grilled Sandwich">
+          <h5 class="food-name">Grilled Sandwich</h5>
+          <p class="description">Grilled bread with cheese and fresh veggies.</p>
+          <p class="quantity">Quantity: 4 Sandwiches</p>
+          <p class="tag">Cheesy Delight</p>
+          <p class="price">Rs 500</p>
+          <button class="btn-orange" onclick="openPopup('Grilled Sandwich', 500)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Pan Cakes"><i class="bi bi-heart"></i></button>
+          <img src="images/pan cakes.jpg" alt="Pancakes">
+          <h5 class="food-name">Pan Cakes</h5>
+          <p class="description">Soft fluffy pancakes with syrup and butter.</p>
+          <p class="quantity">Quantity: 3 Pieces</p>
+          <p class="tag">Sweet Breakfast</p>
+          <p class="price">Rs 500</p>
+          <button class="btn-orange" onclick="openPopup('Pan Cakes', 500)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="French Toast"><i class="bi bi-heart"></i></button>
+          <img src="images/french toast.jpg" alt="French Toast">
+          <h5 class="food-name">French Toast</h5>
+          <p class="description">Golden toast dipped in egg and lightly fried.</p>
+          <p class="quantity">Quantity: 2 Slices</p>
+          <p class="tag">Crispy & Soft</p>
+          <p class="price">Rs 500</p>
+          <button class="btn-orange" onclick="openPopup('French Toast', 500)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Waffles"><i class="bi bi-heart"></i></button>
+          <img src="images/waffles.jpg" alt="Waffles">
+          <h5 class="food-name">Waffles</h5>
+          <p class="description">Crispy waffles with chocolate syrup and cream.</p>
+          <p class="quantity">Quantity: 2 Pieces</p>
+          <p class="tag">Dessert Style</p>
+          <p class="price">Rs 700</p>
+          <button class="btn-orange" onclick="openPopup('Waffles', 700)">Order Now</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="menu-section" id="desi-foods">
+  <div class="container">
+    <div class="menu-title"><div class="line"></div><h4>Desi Foods</h4></div>
+    <div class="row g-4">
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <span class="chefs-pick"><i class="bi bi-award-fill"></i> Chef's Pick</span>
+          <button class="fav-btn" data-name="Chicken Biryani"><i class="bi bi-heart"></i></button>
+          <img src="images/Chickenbiryani.png.jpg" alt="Chicken Biryani">
+          <h5 class="food-name">Chicken Biryani</h5>
+          <p class="description">Fragrant rice cooked with spicy chicken and traditional herbs.</p>
+          <p class="quantity">Serving : 1 Plate</p>
+          <p class="tag">Special Desi Flavor</p>
+          <p class="price">Rs 250</p>
+          <button class="btn-orange" onclick="openPopup('Chicken Biryani', 250)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Beef Nihari"><i class="bi bi-heart"></i></button>
+          <img src="images/beefnihari.png" alt="Beef Nihari">
+          <h5 class="food-name">Beef Nihari</h5>
+          <p class="description">Slow cooked beef in rich spicy gravy with traditional spices.</p>
+          <p class="quantity">Serving : 1 Bowl</p>
+          <p class="tag">Traditional Delight</p>
+          <p class="price">Rs 600</p>
+          <button class="btn-orange" onclick="openPopup('Beef Nihari', 600)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Chicken Karahi"><i class="bi bi-heart"></i></button>
+          <img src="images/chikcen karahi.jpg" alt="Chicken Karahi">
+          <h5 class="food-name">Chicken Karahi</h5>
+          <p class="description">Spicy chicken cooked in wok with tomatoes and green chilies.</p>
+          <p class="quantity">Serving : 1 Dish</p>
+          <p class="tag">Hot & Spicy</p>
+          <p class="price">Rs 800</p>
+          <button class="btn-orange" onclick="openPopup('Chicken Karahi', 800)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Beef Pulao"><i class="bi bi-heart"></i></button>
+          <img src="images/beef pulao.png" alt="Beef Pulao">
+          <h5 class="food-name">Beef Pulao</h5>
+          <p class="description">Aromatic rice with tender beef and mild traditional spices.</p>
+          <p class="quantity">Serving : 1 Plate</p>
+          <p class="tag">Mild & Flavorful</p>
+          <p class="price">Rs 300</p>
+          <button class="btn-orange" onclick="openPopup('Beef Pulao', 300)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Seekh Kabab"><i class="bi bi-heart"></i></button>
+          <img src="images/seekh kabab1.png" alt="Seekh Kabab">
+          <h5 class="food-name">Seekh Kabab</h5>
+          <p class="description">Grilled minced meat skewers with smoky traditional spices.</p>
+          <p class="quantity">Quantity : 8 Pieces</p>
+          <p class="tag">BBQ Special</p>
+          <p class="price">Rs 1000</p>
+          <button class="btn-orange" onclick="openPopup('Seekh Kabab', 1000)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="White Karahi"><i class="bi bi-heart"></i></button>
+          <img src="images/white karahi2.png" alt="White Karahi">
+          <h5 class="food-name">White Karahi</h5>
+          <p class="description">Creamy chicken karahi cooked in rich white sauce.</p>
+          <p class="quantity">Serving : 1 Dish</p>
+          <p class="tag">Creamy Taste</p>
+          <p class="price">Rs 650</p>
+          <button class="btn-orange" onclick="openPopup('White Karahi', 650)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Keema Kachori"><i class="bi bi-heart"></i></button>
+          <img src="images/keema kachori.png" alt="Keema Kachori">
+          <h5 class="food-name">Keema Kachori</h5>
+          <p class="description">Crispy kachori stuffed with spicy minced meat filling.</p>
+          <p class="quantity">Quantity : 2 Pieces</p>
+          <p class="tag">Crispy Snack</p>
+          <p class="price">Rs 200</p>
+          <button class="btn-orange" onclick="openPopup('Keema Kachori', 200)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Chicken Tikka"><i class="bi bi-heart"></i></button>
+          <img src="images/tikka.jpg" alt="Chicken Tikka">
+          <h5 class="food-name">Chicken Tikka</h5>
+          <p class="description">Grilled chicken marinated in spices and cooked.</p>
+          <p class="quantity">Quantity : 4 Pieces</p>
+          <p class="tag">BBQ Grill</p>
+          <p class="price">Rs 850</p>
+          <button class="btn-orange" onclick="openPopup('Chicken Tikka', 850)">Order Now</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="menu-section" id="junk-foods">
+  <div class="container">
+    <div class="menu-title"><div class="line"></div><h4>Fast Foods</h4></div>
+    <div class="row g-4">
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Zinger Burger"><i class="bi bi-heart"></i></button>
+          <img src="images/zinger.jfif" alt="Zinger Burger">
+          <h5 class="food-name">Zinger Burger</h5>
+          <p class="description">Crispy chicken fillet with fresh lettuce and spicy mayo sauce.</p>
+          <p class="quantity">Quantity : 1 Burger</p>
+          <p class="tag">Crunchy & Spicy</p>
+          <p class="price">Rs 550</p>
+          <button class="btn-orange" onclick="openPopup('Zinger Burger', 550)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Lasagna"><i class="bi bi-heart"></i></button>
+          <img src="images/lazagna.png" alt="Lasagna">
+          <h5 class="food-name">Lasagna</h5>
+          <p class="description">Layers of pasta with creamy cheese and rich meat sauce.</p>
+          <p class="quantity">Quantity : 1 Slice</p>
+          <p class="tag">Cheesy Delight</p>
+          <p class="price">Rs 950</p>
+          <button class="btn-orange" onclick="openPopup('Lasagna', 950)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <span class="chefs-pick"><i class="bi bi-award-fill"></i> Chef's Pick</span>
+          <button class="fav-btn" data-name="Pizza"><i class="bi bi-heart"></i></button>
+          <img src="images/pizza .png" alt="Pizza">
+          <h5 class="food-name">Pizza</h5>
+          <p class="description">Loaded with cheese, chicken and fresh vegetable toppings.</p>
+          <p class="quantity">Quantity : 1 Medium size</p>
+          <p class="tag">Cheese Lover</p>
+          <p class="price">Rs 1200</p>
+          <button class="btn-orange" onclick="openPopup('Pizza', 1200)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Fried Chicken"><i class="bi bi-heart"></i></button>
+          <img src="images/fried-chicken-5.jpg" alt="Fried Chicken">
+          <h5 class="food-name">Fried Chicken</h5>
+          <p class="description">Golden crispy chicken fried with special seasoning.</p>
+          <p class="quantity">Quantity : 4 Pieces</p>
+          <p class="tag">Crispy Classic</p>
+          <p class="price">Rs 850</p>
+          <button class="btn-orange" onclick="openPopup('Fried Chicken', 850)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="French Fries"><i class="bi bi-heart"></i></button>
+          <img src="images/french friess.avif" alt="French Fries">
+          <h5 class="food-name">French Fries</h5>
+          <p class="description">Golden fried potato sticks served with ketchup dip.</p>
+          <p class="quantity">Quantity : 1 Box</p>
+          <p class="tag">Light Snack</p>
+          <p class="price">Rs 250</p>
+          <button class="btn-orange" onclick="openPopup('French Fries', 250)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Pizza Fries"><i class="bi bi-heart"></i></button>
+          <img src="images/Pizza-Fries-square-FS-31.jpg" alt="Pizza Fries">
+          <h5 class="food-name">Pizza Fries</h5>
+          <p class="description">Fries topped with cheese, chicken and pizza sauce.</p>
+          <p class="quantity">Quantity : 1 Box</p>
+          <p class="tag">Fusion Snack</p>
+          <p class="price">Rs 599</p>
+          <button class="btn-orange" onclick="openPopup('Pizza Fries', 599)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Momos"><i class="bi bi-heart"></i></button>
+          <img src="images/momos1.png" alt="Momos">
+          <h5 class="food-name">Momos</h5>
+          <p class="description">Steamed dumplings filled with chicken and vegetables.</p>
+          <p class="quantity">Quantity : 6 Pieces</p>
+          <p class="tag">Asian Snack</p>
+          <p class="price">Rs 300</p>
+          <button class="btn-orange" onclick="openPopup('Momos', 300)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Chowmein"><i class="bi bi-heart"></i></button>
+          <img src="images/chowmien.jpg" alt="Chowmein">
+          <h5 class="food-name">Chowmein</h5>
+          <p class="description">Stir fried noodles with vegetables and savory sauce.</p>
+          <p class="quantity">Quantity : 1 Plate</p>
+          <p class="tag">Street Style</p>
+          <p class="price">Rs 350</p>
+          <button class="btn-orange" onclick="openPopup('Chowmein', 350)">Order Now</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="menu-section" id="chinese-foods">
+  <div class="container">
+    <div class="menu-title"><div class="line"></div><h4>Chinese Foods</h4></div>
+    <div class="row g-4">
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Chicken Shashlik"><i class="bi bi-heart"></i></button>
+          <img src="images/shashlik.webp" alt="Chicken Shashlik">
+          <h5 class="food-name">Chicken Shashlik</h5>
+          <p class="description">Juicy chicken cubes cooked with vegetables and savory sauce.</p>
+          <p class="quantity">Quantity : 1 Plate</p>
+          <p class="tag">Grilled Special</p>
+          <p class="price">Rs 800</p>
+          <button class="btn-orange" onclick="openPopup('Chicken Shashlik', 800)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Kung Pao Chicken"><i class="bi bi-heart"></i></button>
+          <img src="images/kang pau chicken.jpg" alt="Kung Pao Chicken">
+          <h5 class="food-name">Kung Pao Chicken</h5>
+          <p class="description">Spicy stir-fried chicken with peanuts and Chinese sauce.</p>
+          <p class="quantity">Quantity : 1 Bowl</p>
+          <p class="tag">Spicy Delight</p>
+          <p class="price">Rs 750</p>
+          <button class="btn-orange" onclick="openPopup('Kung Pao Chicken', 750)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Dumplings"><i class="bi bi-heart"></i></button>
+          <img src="images/dumplings.webp" alt="Dumplings">
+          <h5 class="food-name">Dumplings</h5>
+          <p class="description">Steamed chicken dumplings served with soy dip.</p>
+          <p class="quantity">Quantity : 6 Pieces</p>
+          <p class="tag">Light Snack</p>
+          <p class="price">Rs 250</p>
+          <button class="btn-orange" onclick="openPopup('Dumplings', 250)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Chicken Corn Soup"><i class="bi bi-heart"></i></button>
+          <img src="images/ChickenCornSoup.webp" alt="Chicken Corn Soup">
+          <h5 class="food-name">Chicken Corn Soup</h5>
+          <p class="description">Warm soup with chicken chunks and sweet corn.</p>
+          <p class="quantity">Quantity : 1 Bowl</p>
+          <p class="tag">Healthy Soup</p>
+          <p class="price">Rs 450</p>
+          <button class="btn-orange" onclick="openPopup('Chicken Corn Soup', 450)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Egg Fried Rice"><i class="bi bi-heart"></i></button>
+          <img src="images/egg-fried-rice.webp" alt="Egg Fried Rice">
+          <h5 class="food-name">Egg Fried Rice</h5>
+          <p class="description">Stir-fried rice with egg, vegetables and light soy sauce.</p>
+          <p class="quantity">Quantity : 1 Plate</p>
+          <p class="tag">Classic Chinese</p>
+          <p class="price">Rs 550</p>
+          <button class="btn-orange" onclick="openPopup('Egg Fried Rice', 550)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Noodles"><i class="bi bi-heart"></i></button>
+          <img src="images/noodles.jpg" alt="Noodles">
+          <h5 class="food-name">Noodles</h5>
+          <p class="description">Stir-fried noodles with vegetables and soy sauce flavor.</p>
+          <p class="quantity">Quantity : 1 Plate</p>
+          <p class="tag">Street Style</p>
+          <p class="price">Rs 500</p>
+          <button class="btn-orange" onclick="openPopup('Noodles', 500)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Spring Rolls"><i class="bi bi-heart"></i></button>
+          <img src="images/spring rolls.jpg" alt="Spring Rolls">
+          <h5 class="food-name">Spring Rolls</h5>
+          <p class="description">Crispy rolls filled with vegetables and light spices.</p>
+          <p class="quantity">Quantity : 4 Pieces</p>
+          <p class="tag">Crispy Snack</p>
+          <p class="price">Rs 250</p>
+          <button class="btn-orange" onclick="openPopup('Spring Rolls', 250)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <span class="chefs-pick"><i class="bi bi-award-fill"></i> Chef's Pick</span>
+          <button class="fav-btn" data-name="Hot Pot"><i class="bi bi-heart"></i></button>
+          <img src="images/hotpot.jpg" alt="Hot Pot">
+          <h5 class="food-name">Hot Pot</h5>
+          <p class="description">Chinese style hot pot with rich broth and mixed ingredients.</p>
+          <p class="quantity">Quantity : 1 Pot serve 2-3 person</p>
+          <p class="tag">Premium Dish</p>
+          <p class="price">Rs 3000</p>
+          <button class="btn-orange" onclick="openPopup('Hot Pot', 3000)">Order Now</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="menu-section" id="desserts-drinks">
+  <div class="container">
+    <div class="menu-title"><div class="line"></div><h4>Desserts & Drinks</h4></div>
+    <div class="row g-4">
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Brownies"><i class="bi bi-heart"></i></button>
+          <img src="images/brownies.jpg" alt="Brownies">
+          <h5 class="food-name">Brownies</h5>
+          <p class="description">Rich chocolate brownies soft inside with a fudgy texture.</p>
+          <p class="quantity">Quantity : 2 Pieces</p>
+          <p class="tag">Chocolate Lover</p>
+          <p class="price">Rs 500</p>
+          <button class="btn-orange" onclick="openPopup('Brownies', 500)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <span class="chefs-pick"><i class="bi bi-award-fill"></i> Chef's Pick</span>
+          <button class="fav-btn" data-name="Chocolate Lava Cake"><i class="bi bi-heart"></i></button>
+          <img src="images/lava cake.jpg" alt="Chocolate Lava Cake">
+          <h5 class="food-name">Chocolate Lava Cake</h5>
+          <p class="description">Warm chocolate cake with a gooey molten center.</p>
+          <p class="quantity">Quantity : 1 Piece</p>
+          <p class="tag">Premium Dessert</p>
+          <p class="price">Rs 450</p>
+          <button class="btn-orange" onclick="openPopup('Chocolate Lava Cake', 450)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Cheese Cake"><i class="bi bi-heart"></i></button>
+          <img src="images/cheese cake.jpg" alt="Cheese Cake">
+          <h5 class="food-name">Cheese Cake</h5>
+          <p class="description">Creamy cheesecake with a soft crust and rich flavor.</p>
+          <p class="quantity">Quantity : 1 Slice</p>
+          <p class="tag">Sweet Delight</p>
+          <p class="price">Rs 750</p>
+          <button class="btn-orange" onclick="openPopup('Cheese Cake', 750)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Donuts"><i class="bi bi-heart"></i></button>
+          <img src="images/donuts.jpg" alt="Donuts">
+          <h5 class="food-name">Donuts</h5>
+          <p class="description">Soft fried donuts topped with chocolate and sugar glaze.</p>
+          <p class="quantity">Quantity : 2 Pieces</p>
+          <p class="tag">Sweet Snack</p>
+          <p class="price">Rs 500</p>
+          <button class="btn-orange" onclick="openPopup('Donuts', 500)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Tea"><i class="bi bi-heart"></i></button>
+          <img src="images/tea.jpg" alt="Tea">
+          <h5 class="food-name">Tea</h5>
+          <p class="description">Traditional hot tea brewed with milk and aromatic spices.</p>
+          <p class="quantity">Quantity : 1 Cup</p>
+          <p class="tag">Refreshing Drink</p>
+          <p class="price">Rs 150</p>
+          <button class="btn-orange" onclick="openPopup('Tea', 150)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Black Coffee"><i class="bi bi-heart"></i></button>
+          <img src="images/black coffee.jpg" alt="Black Coffee">
+          <h5 class="food-name">Black Coffee</h5>
+          <p class="description">Strong brewed coffee with rich aroma and bold taste.</p>
+          <p class="quantity">Quantity : 1 Cup</p>
+          <p class="tag">Energy Booster</p>
+          <p class="price">Rs 400</p>
+          <button class="btn-orange" onclick="openPopup('Black Coffee', 400)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Cappuccino"><i class="bi bi-heart"></i></button>
+          <img src="images/cappuccino.jpg" alt="Cappuccino">
+          <h5 class="food-name">Cappuccino</h5>
+          <p class="description">Smooth coffee with steamed milk foam and bold espresso.</p>
+          <p class="quantity">Quantity : 1 Cup</p>
+          <p class="tag">Coffee Classic</p>
+          <p class="price">Rs 650</p>
+          <button class="btn-orange" onclick="openPopup('Cappuccino', 650)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Hot Chocolate"><i class="bi bi-heart"></i></button>
+          <img src="images/hot chocolate.jpg" alt="Hot Chocolate">
+          <h5 class="food-name">Hot Chocolate</h5>
+          <p class="description">Warm chocolate drink topped with creamy foam.</p>
+          <p class="quantity">Quantity : 1 Cup</p>
+          <p class="tag">Cozy Drink</p>
+          <p class="price">Rs 600</p>
+          <button class="btn-orange" onclick="openPopup('Hot Chocolate', 600)">Order Now</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="menu-section" id="icecreams">
+  <div class="container">
+    <div class="menu-title"><div class="line"></div><h4>Icecreams</h4></div>
+    <div class="row g-4">
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Chocolate Icecream"><i class="bi bi-heart"></i></button>
+          <img src="images/chocolate icecream.jpg" alt="Chocolate Ice Cream">
+          <h5 class="food-name">Chocolate Ice Cream</h5>
+          <p class="description">Rich creamy chocolate icecream with smooth and sweet flavor.</p>
+          <p class="serving">Serving : 1 Scoop</p>
+          <p class="tag">Chocolate Lover</p>
+          <p class="price">Rs 150</p>
+          <button class="btn-orange" onclick="openPopup('Chocolate Icecream', 150)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Vanilla Icecream"><i class="bi bi-heart"></i></button>
+          <img src="images/vanilla icecream.jpg" alt="Vanilla Ice Cream">
+          <h5 class="food-name">Vanilla Ice Cream</h5>
+          <p class="description">Classic vanilla icecream with smooth creamy texture.</p>
+          <p class="serving">Serving : 1 Scoop</p>
+          <p class="tag">Classic Flavor</p>
+          <p class="price">Rs 150</p>
+          <button class="btn-orange" onclick="openPopup('Vanilla Icecream', 150)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Strawberry Icecream"><i class="bi bi-heart"></i></button>
+          <img src="images/strawberry icecream.jpg" alt="Strawberry Ice Cream">
+          <h5 class="food-name">Strawberry Ice Cream</h5>
+          <p class="description">Sweet strawberry flavored icecream with fruity freshness.</p>
+          <p class="serving">Serving : 1 Scoop</p>
+          <p class="tag">Fruity Delight</p>
+          <p class="price">Rs 150</p>
+          <button class="btn-orange" onclick="openPopup('Strawberry Icecream', 150)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Mango Icecream"><i class="bi bi-heart"></i></button>
+          <img src="images/mango-ice-cream (1).jpg" alt="Mango Ice Cream">
+          <h5 class="food-name">Mango Ice Cream</h5>
+          <p class="description">Refreshing mango icecream with tropical sweet flavor.</p>
+          <p class="serving">Serving : 1 Scoop</p>
+          <p class="tag">Summer Special</p>
+          <p class="price">Rs 150</p>
+          <button class="btn-orange" onclick="openPopup('Mango Icecream', 150)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Blueberry Icecream"><i class="bi bi-heart"></i></button>
+          <img src="images/blueberry icecream.jpg" alt="Blueberry Ice Cream">
+          <h5 class="food-name">Blueberry Ice Cream</h5>
+          <p class="description">Creamy blueberry icecream with sweet and tangy flavor.</p>
+          <p class="serving">Serving : 1 Scoop</p>
+          <p class="tag">Berry Fresh</p>
+          <p class="price">Rs 150</p>
+          <button class="btn-orange" onclick="openPopup('Blueberry Icecream', 150)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Pistachio Icecream"><i class="bi bi-heart"></i></button>
+          <img src="images/Pistachio-ice-cream-hero-06.jpg" alt="Pistachio Ice Cream">
+          <h5 class="food-name">Pistachio Ice Cream</h5>
+          <p class="description">Nutty pistachio icecream with rich creamy texture.</p>
+          <p class="serving">Serving : 1 Scoop</p>
+          <p class="tag">Nutty Flavor</p>
+          <p class="price">Rs 150</p>
+          <button class="btn-orange" onclick="openPopup('Pistachio Icecream', 150)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Cookie Icecream"><i class="bi bi-heart"></i></button>
+          <img src="images/cookie icecream.jpg" alt="Cookie Ice Cream">
+          <h5 class="food-name">Cookie Ice Cream</h5>
+          <p class="description">Creamy icecream mixed with crunchy cookie bits.</p>
+          <p class="serving">Serving : 1 Scoop</p>
+          <p class="tag">Crunchy Mix</p>
+          <p class="price">Rs 150</p>
+          <button class="btn-orange" onclick="openPopup('Cookie Icecream', 150)">Order Now</button>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="food-card reveal">
+          <button class="fav-btn" data-name="Peanut Butter Icecream"><i class="bi bi-heart"></i></button>
+          <img src="images/Nutty-Buddy-Ice-Cream-No-Churn-Recipe-square.png" alt="Peanut Butter Ice Cream">
+          <h5 class="food-name">Peanut Butter Ice Cream</h5>
+          <p class="description">Rich peanut butter icecream with creamy and nutty taste.</p>
+          <p class="serving">Serving : 1 Scoop</p>
+          <p class="tag">Nutty Special</p>
+          <p class="price">Rs 150</p>
+          <button class="btn-orange" onclick="openPopup('Peanut Butter Icecream', 150)">Order Now</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<footer class="foodella-footer">
+    <div class="footer-container">
+        <div class="footer-logo">
+             <a href="menu.html"><img src="images/logo.png" alt="Foodella Logo"></a>
+        </div>
+        <div class="footer-row">
+            <div class="footer-col">
+                <h5>Quick Links</h5>
+                <div class="footer-links">
+                    <a href="index.html">Home</a>
+                    <a href="menu.html">Menu</a>
+                    <a href="index.html#about-us">About Us</a>
+                    <a href="index.html#gallery">Gallery</a>
+                    <a href="index.html#testimonials">Testimonials</a>
+                    <a href="index.html#contact-us">Contact Us</a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h5>Categories</h5>
+                <div class="footer-links">
+                    <a href="#breakfast">Breakfast</a>
+                    <a href="#desi-foods">Desi Foods</a>
+                    <a href="#junk-foods">Fast Foods</a>
+                    <a href="#chinese-foods">Chinese Foods</a>
+                    <a href="#desserts-drinks">Desserts & Drinks</a>
+                    <a href="#icecreams">Icecreams</a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h5>Contact Us</h5>
+                <div class="footer-contact">
+                    <p>Main City Branch, Karachi</p>
+                    <p>+123 456 789</p>
+                    <p>foodella@gmail.com</p>
+                    <p>9:00 AM - 11:00 PM</p>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 Foodella. All Rights Reserved.</p>
+        </div>
+    </div>
+</footer>
+
+</div>
+
+<script>
+// toast helper
+function showToast(message) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast-msg';
+    toast.textContent = message;
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 400);
+    }, 2800);
+}
+
+let currentItem = { name: '', price: 0 };
+let currentQty = 1;
+
+function openPopup(name, price) {
+    currentItem = { name: name, price: price };
+    currentQty = 1;
+    document.getElementById('p-item-name').innerText = name;
+    document.getElementById('p-item-price').innerText = 'Rs ' + price;
+    document.getElementById('p-qty-value').innerText = currentQty;
+    document.getElementById('p-notes').value = '';
+    document.getElementById('custom-overlay').style.display = 'block';
+    document.getElementById('order-popup').style.display = 'block';
+    document.getElementById('main-wrapper').classList.add('blur-active');
+}
+
+function changeQty(delta) {
+    currentQty = Math.max(1, currentQty + delta);
+    document.getElementById('p-qty-value').innerText = currentQty;
+}
+
+function closePopup() {
+    document.getElementById('custom-overlay').style.display = 'none';
+    document.getElementById('order-popup').style.display = 'none';
+    document.getElementById('main-wrapper').classList.remove('blur-active');
+}
+
+function placeOrder() {
+    const note = document.getElementById('p-notes').value.trim();
+    addToCart(currentItem.name, currentItem.price, currentQty, note);
+    showToast(currentQty + ' × ' + currentItem.name + ' added to cart!');
+    closePopup();
+}
+
+// cart storage
+function getCart() {
+    try { return JSON.parse(localStorage.getItem('foodella_cart')) || []; }
+    catch (e) { return []; }
+}
+function saveCart(cart) {
+    localStorage.setItem('foodella_cart', JSON.stringify(cart));
+    renderCart();
+}
+function addToCart(name, price, qty, note) {
+    const cart = getCart();
+    // items with different notes get their own row
+    const existing = cart.find(i => i.name === name && (i.note || '') === (note || ''));
+    if (existing) existing.qty += qty;
+    else cart.push({ name: name, price: price, qty: qty, note: note || '' });
+    saveCart(cart);
+}
+function updateCartQty(idx, delta) {
+    const cart = getCart();
+    if (!cart[idx]) return;
+    cart[idx].qty += delta;
+    if (cart[idx].qty <= 0) cart.splice(idx, 1);
+    saveCart(cart);
+}
+function removeFromCart(idx) {
+    const cart = getCart();
+    cart.splice(idx, 1);
+    saveCart(cart);
+}
+function renderCart() {
+    const cart = getCart();
+    const list = document.getElementById('cart-items-list');
+    const totalEl = document.getElementById('cart-total');
+    const checkoutBtn = document.getElementById('checkout-btn');
+    const count = cart.reduce((sum, i) => sum + i.qty, 0);
+    const total = cart.reduce((sum, i) => sum + i.qty * i.price, 0);
+
+    document.querySelectorAll('#cart-count, #cart-count-floating').forEach(el => el.textContent = count);
+    totalEl.textContent = 'Rs ' + total;
+    checkoutBtn.disabled = cart.length === 0;
+
+    if (cart.length === 0) {
+        list.innerHTML = '<p class="cart-empty-msg"><i class="bi bi-cart-x" style="font-size:2rem;"></i><br>Your cart is empty.<br>Start adding some delicious food!</p>';
+        return;
+    }
+
+    list.innerHTML = cart.map((item, idx) => `
+        <div class="cart-item-row">
+            <div class="cart-item-info">
+                <div class="cart-item-name">${item.name}</div>
+                <div class="cart-item-price">Rs ${item.price} × ${item.qty} = Rs ${item.price * item.qty}</div>
+                ${item.note ? `<div class="cart-item-note"><i class="bi bi-pencil"></i> ${item.note}</div>` : ''}
+            </div>
+            <div class="cart-item-qty">
+                <button class="cart-qty-btn" onclick="updateCartQty(${idx}, -1)"><i class="bi bi-dash"></i></button>
+                <span>${item.qty}</span>
+                <button class="cart-qty-btn" onclick="updateCartQty(${idx}, 1)"><i class="bi bi-plus"></i></button>
+            </div>
+            <button class="cart-remove-btn" onclick="removeFromCart(${idx})" title="Remove"><i class="bi bi-trash3"></i></button>
+        </div>
+    `).join('');
+}
+
+function openCart() {
+    document.getElementById('cart-overlay').style.display = 'block';
+    document.getElementById('cart-panel').classList.add('open');
+}
+function closeCart() {
+    document.getElementById('cart-overlay').style.display = 'none';
+    document.getElementById('cart-panel').classList.remove('open');
+}
+function checkoutCart() {
+    const cart = getCart();
+    if (cart.length === 0) return;
+    const count = cart.reduce((sum, i) => sum + i.qty, 0);
+    showToast('Order placed! ' + count + ' item(s) are on the way.');
+    saveCart([]);
+    closeCart();
+}
+
+renderCart();
+window.addEventListener('storage', renderCart);
+
+// favorites
+function getFavorites() {
+    try { return JSON.parse(localStorage.getItem('foodella_favorites')) || []; }
+    catch (e) { return []; }
+}
+function saveFavorites(favs) { localStorage.setItem('foodella_favorites', JSON.stringify(favs)); }
+
+function initFavorites() {
+    const favs = getFavorites();
+    document.querySelectorAll('.fav-btn').forEach(btn => {
+        const name = btn.dataset.name;
+        const isFav = favs.includes(name);
+        btn.classList.toggle('active', isFav);
+        btn.querySelector('i').className = isFav ? 'bi bi-heart-fill' : 'bi bi-heart';
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            let favs = getFavorites();
+            if (favs.includes(name)) {
+                favs = favs.filter(f => f !== name);
+                btn.classList.remove('active');
+                btn.querySelector('i').className = 'bi bi-heart';
+                showToast(name + ' removed from favorites');
+            } else {
+                favs.push(name);
+                btn.classList.add('active');
+                btn.querySelector('i').className = 'bi bi-heart-fill';
+                showToast(name + ' added to favorites');
+            }
+            saveFavorites(favs);
+            if (activeCategory === 'favorites') applyFilters();
+        });
+    });
+}
+initFavorites();
+
+// search + category + favorites filter
+const searchInput = document.getElementById('menu-search-input');
+const filterPills = document.querySelectorAll('.filter-pill');
+const menuSections = document.querySelectorAll('.menu-section');
+let activeCategory = 'all';
+
+function applyFilters() {
+    const term = searchInput.value.trim().toLowerCase();
+    const favs = getFavorites();
+    let anyVisible = false;
+
+    menuSections.forEach(section => {
+        const matchesCategory = activeCategory === 'all' || activeCategory === 'favorites' || section.id === activeCategory;
+        let sectionHasVisibleCard = false;
+
+        section.querySelectorAll('.food-card').forEach(card => {
+            const nameEl = card.querySelector('.food-name');
+            const name = nameEl ? nameEl.textContent.toLowerCase() : '';
+            const favName = card.querySelector('.fav-btn').dataset.name;
+            const matchesSearch = term === '' || name.includes(term);
+            const matchesFav = activeCategory !== 'favorites' || favs.includes(favName);
+            const show = matchesCategory && matchesSearch && matchesFav;
+            card.closest('.col-6, .col-md-3').style.display = show ? '' : 'none';
+            if (show) sectionHasVisibleCard = true;
+        });
+
+        const showSection = matchesCategory && sectionHasVisibleCard;
+        section.style.display = showSection ? '' : 'none';
+        if (sectionHasVisibleCard) anyVisible = true;
+    });
+
+    document.getElementById('no-results').style.display = anyVisible ? 'none' : 'block';
+}
+
+searchInput.addEventListener('input', applyFilters);
+
+filterPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+        filterPills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        activeCategory = pill.dataset.target;
+        applyFilters();
+        if (activeCategory !== 'all' && activeCategory !== 'favorites') {
+            const target = document.getElementById(activeCategory);
+            if (target) setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+        }
+    });
+});
+
+// navbar + back to top
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 30);
+    document.getElementById('back-to-top').classList.toggle('show', window.scrollY > 400);
+});
+document.getElementById('back-to-top').addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// scroll reveal
+const revealEls = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('active');
+            revealObserver.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.1 });
+revealEls.forEach(el => revealObserver.observe(el));
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
